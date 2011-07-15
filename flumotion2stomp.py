@@ -248,7 +248,7 @@ class FluToStomp:
         state.addListener(self, set_= self.component_state_set)
 
     def run_command(self, message):
-        command = message["command"]
+        command = str(message["command"])
         component = message.get("component", None)
         params = message.get("params", [])
         method = message.get("method", None)
@@ -283,6 +283,8 @@ class FluToStomp:
                 d = self.model.callRemote(command, state, *params)
             return d
         except Exception, e:
+            import traceback
+            traceback.print_exc()
             print "Got exception %r running %s" % (e, command)
         return False
 
