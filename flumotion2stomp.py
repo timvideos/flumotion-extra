@@ -21,7 +21,7 @@
 import sys
 import copy
 import os
-root = os.path.join('/usr/lib', 'flumotion', 'python')
+root = os.path.join('/usr/local/lib', 'flumotion', 'python')
 sys.path.insert(0, root)
 
 from stompservice import StompClientFactory
@@ -272,11 +272,13 @@ class FluToStomp:
         if need_method and not method:
             print "need method but none specified"
             return False
+        else:
+            method = str(method)
         if not state:
             print "component %s not found" % (component,)
             return False
         try:
-            print "about to run %s on %r" % (command, state)
+            print "about to run %s on %r %r %r" % (command, state, method, params)
             if need_method:
                 d = self.model.callRemote(command, state, method, *params)
             else:
