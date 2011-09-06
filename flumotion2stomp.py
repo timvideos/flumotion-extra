@@ -261,9 +261,17 @@ class FluToStomp:
         params = message.get("params", [])
         method = message.get("method", None)
         # allow only specific commands
-        if command not in ["componentCallRemote", "invokeOnComponents", "componentStart", "componentStop"]:
+        if command not in ["componentCallRemote", "invokeOnComponents", "componentStart", "componentStop", "startAll", "stopAll"]:
             return False
-        if not component:
+        if command == "startAll":
+            for c in self._components:
+               d = self.model.callRemote("componentStart", c)
+            return d
+        elif command == "stopAll":
+            for c in self._components:
+               d = self.model.callRemote("componentStop", c)
+            return d
+        elif not component:
             return False
         state = None
         if command == "invokeOnComponents":

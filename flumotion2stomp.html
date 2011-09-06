@@ -271,6 +271,18 @@ function stop_all_recordings() {
   stomp.send(JSON.stringify(command), COMMAND_CHANNEL);
 }
 
+function start_all_components() {
+  console.log("start recording for all components");
+  command = { "command" : "startAll" };
+  stomp.send(JSON.stringify(command), COMMAND_CHANNEL);
+}
+
+function stop_all_components() {
+  console.log("stop recording for all components");
+  command = { "command" : "stopAll" };
+  stomp.send(JSON.stringify(command), COMMAND_CHANNEL);
+}
+
 function iec_scale(db) {
   var pct = 0.0
 
@@ -372,6 +384,8 @@ function stop_selected_components() {
 
    // Everything is setup. Start the connection!
    stomp.connect("localhost", 61613); //, 'guest', 'guest');
+   $('#startallcomponents').styledButton({'action': function() { start_all_components(); } });
+   $('#stopallcomponents').styledButton({'action': function() { stop_all_components(); } });
    $('#startallrecordings').styledButton({'action': function() { start_all_recordings(); } });
    $('#stopallrecordings').styledButton({'action': function() { stop_all_recordings(); } });
    $('#startcomponent').styledButton({'action': function() { start_selected_components(); } });
@@ -410,9 +424,13 @@ function stop_selected_components() {
 <body>
 <div id="summary" class="rounded-corners">
 <h2>Summary</h2>
+<div id="componentsummary">
+<h3>Componets</h3>
+<span id="startallcomponents">Start All (components)</span>&nbsp;&nbsp;<span id="stopallcomponents">Stop All (components)</span>
+</div>
 <div id="recordingsummary">
 <h3>Recordings</h3>
-<span id="startallrecordings">Start/Change All</span>&nbsp;&nbsp;<span id="stopallrecordings">Stop All</span>
+<span id="startallrecordings">Start/Change All (recordings)</span>&nbsp;&nbsp;<span id="stopallrecordings">Stop All (recordings)</span>
 </div>
 <div id="streamingsummary">
 <h3>Streaming</h3>
