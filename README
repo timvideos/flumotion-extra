@@ -47,6 +47,8 @@ You can use the provided orbited.cfg file and start the server using:
  # easy_install orbited
  # orbited --config orbited.cfg
 
+(If you want the output to go to a log file use orbited-log.cfg)
+
 
 Step 2 - Setting up flumotion2stomp
 ---------------------------------------

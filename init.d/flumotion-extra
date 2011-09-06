@@ -1,0 +1,124 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          flumotion-extra
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Flumotion Streaming Server Web Interface
+# Description:       Flumotion is a streaming server for audio and video. This
+#                    provides an admin web interface.
+### END INIT INFO
+
+# Author: Tim Ansell <mithro@mithis.com>
+
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+DESC="Flumotion Streaming Server Web Interface"
+NAME="flumotion-extra"
+
+LOGFILEDIR="/usr/local/var/log/flumotion-extra/"
+RUNFILEDIR="/usr/local/var/run/flumotion-extra/"
+
+SCRIPTNAME="/etc/init.d/$NAME"
+
+ORBITED="/usr/local/bin/orbited"
+ORBITED_PID=$RUNFILEDIR/orbited.pid
+ORBITED_ARGS="--config /usr/local/etc/flumotion-extra/orbited.cfg --pid-file $ORBITED_PID -d"
+
+FLU2STOMP="/usr/local/lib/flumotion/extra/flumotion2stomp.py"
+FLU2STOMP_PID=$RUNFILEDIR/flu2stomp.pid
+FLU2STOMP_ARGS="-m user@localhost -s 61613 -l $LOGFILEDIR/flu2stomp.log"
+
+# Exit if the package is not installed
+if [ ! -x "$ORBITED" ]; then 
+	echo "$ORBITED not executable"
+	exit 0
+fi
+if [ ! -x "$FLU2STOMP" ]; then
+	echo "$FLU2STOMP not executable"
+	exit 0
+fi
+
+# Read configuration variable file if it is present
+[ -r "/etc/default/$NAME" ] && . "/etc/default/$NAME"
+
+# Load the VERBOSE setting and other rcS variables
+[ -f /etc/default/rcS ] && . /etc/default/rcS
+VERBOSE=yes
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+#
+# Function that starts all instances
+#
+do_start()
+{
+	start-stop-daemon --start --user flumotion --pidfile $ORBITED_PID --startas $ORBITED --chuid flumotion -- $ORBITED_ARGS
+	sleep 5
+	start-stop-daemon --start --user flumotion --pidfile $FLU2STOMP_PID --startas $FLU2STOMP --chuid flumotion --make-pidfile --background -- $FLU2STOMP_ARGS
+}
+
+#
+# Function that stops all instances
+#
+do_stop()
+{
+	start-stop-daemon --stop --user flumotion --pidfile $ORBITED_PID --retry=TERM/30/KILL/5
+	start-stop-daemon --stop --user flumotion --pidfile $FLU2STOMP_PID --retry=TERM/30/KILL/5
+}
+
+# Create flumotion's home dir on startup as it might be a tmpfs
+if [ ! -d $RUNFILEDIR ]; then
+	mkdir -p $RUNFILEDIR
+fi
+if [ -e $RUNFILEDIR ]; then
+	chown -R flumotion:flumotion $RUNFILEDIR
+fi
+if [ ! -d $LOGFILEDIR ]; then
+	mkdir -p $LOGFILEDIR
+fi
+if [ -e $LOGFILEDIR ]; then
+	chown -R flumotion:flumotion $LOGFILEDIR
+fi
+
+case "$1" in
+  start)
+	shift
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start $*
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+
+	;;
+  stop)
+	shift
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop $*
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  restart|force-reload)
+	shift
+	[ "$VERBOSE" != no ] && log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop $*
+	do_start $*
+	case "$?" in
+		0) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		1) [ "$VERBOSE" != no ] && log_end_msg 1 ;; # Old process is still running
+		*) [ "$VERBOSE" != no ] && log_end_msg 1 ;; # Failed to start
+	esac
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|restart}" >&2
+	exit 3
+	;;
+esac
