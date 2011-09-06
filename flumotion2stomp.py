@@ -70,7 +70,15 @@ class FluToStomp:
                           help="disable encryption when connecting to the manager")
         parser.add_option('-s', '--stomp-port', action="store", type="string",
                           dest="stomp")
+        parser.add_option('-l', '--logfile', 
+                          action="store", type="string", dest="logfile",
+                          help="the logfile to write to")
         options, args = parser.parse_args(args)
+
+        if options.logfile:
+            logfile = open(options.logfile, 'a')
+            sys.stdout = logfile
+            sys.stderr = logfile
 
         if options.debug:
             log.setFluDebug(options.debug)
